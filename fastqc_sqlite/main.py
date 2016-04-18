@@ -25,7 +25,7 @@ def main():
                         required = True,
                         help = 'uuid string',
     )
-    parser.add_argument(, '--fastqc_zip_path',
+    parser.add_argument('--fastqc_zip_path',
                         required=True
     )
     
