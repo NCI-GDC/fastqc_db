@@ -56,13 +56,16 @@ def main():
     tool_name = 'fastqc_db'
     logger = pipe_util.setup_logging(tool_name, args, uuid)
 
-    if args.db_cred_s3url:
-        db_cred_s3url = args.db_cred_s3url
-    else:
-        db_cred_s3url = None
-    if args.s3cfg_path:
-        s3cfg_path = args.s3cfg_path
+    
+    if db_cred_s3url is not None: #db server case
+        conn_dict = pipe_util.get_connect_dict(db_cred_s3url, s3cfg_path, logger)
+        engine = sqlalchemy.create_engine(sqlalchemy.engine.url.URL(**conn_dict))
+    else: # local sqlite case
+        sqlite_name = uuid + '_' + tool_name + '.db'
+        engine_path = 'sqlite:///' + sqlite_name
+        engine = sqlalchemy.create_engine(engine_path, isolation_level='SERIALIZABLE')
 
+    
     fastqc_db.fastqc_db(uuid, fastqc_zip_path, engine, logger)
     return
 
