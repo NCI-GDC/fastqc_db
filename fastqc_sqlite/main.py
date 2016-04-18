@@ -53,7 +53,7 @@ def main():
     if args.s3cfg_path:
         s3cfg_path = args.s3cfg_path
 
-    
+    tool_name = 'fastqc_db'
     logger = pipe_util.setup_logging(tool_name, args, uuid)
 
     if args.db_cred_s3url:
