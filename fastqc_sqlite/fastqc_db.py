@@ -109,6 +109,12 @@ def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
     return data_dict
 
 
+def fastqc_db_data(uuid, file_path, engine, logger):
+    pass
+
+def fastqc_db_summary(uuid, file_path, engine, logger):
+    pass
+
 def fastqc_to_db(uuid, fq_path, engine, logger):
     fastq_name = os.path.basename(fq_path)
     fastq_dir = os.path.dirname(fq_path)
