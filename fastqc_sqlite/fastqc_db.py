@@ -1,7 +1,5 @@
-import logging
 import os
-import shlex
-import subprocess
+import shutil
 import sys
 #
 import pandas as pd
@@ -109,24 +107,23 @@ def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
     return data_dict
 
 
-def fastqc_db_data(uuid, file_path, engine, logger):
-    pass
 
-def fastqc_db_summary(uuid, file_path, engine, logger):
-    pass
-
-def fastqc_to_db(uuid, fq_path, engine, logger):
-    fastq_name = os.path.basename(fq_path)
-    fastq_dir = os.path.dirname(fq_path)
-    fastq_base, fastq_ext = os.path.splitext(fastq_name)
-    fastq_base = fastq_base.rstrip('.fq')
-    qc_report_dir = os.path.join(fastq_dir, fastq_base + '_fastqc')
-    fastqc_data_path = os.path.join(qc_report_dir, 'fastqc_data.txt')
-    fastqc_summary_path = os.path.join(qc_report_dir, 'summary.txt')
-    if pipe_util.already_step(fastq_dir, 'fastqc_db_' + fastq_base, logger):
+def fastqc_db(uuid, fastqc_zip_path, engine, logger):
+    fastqc_zip_name = os.path.basename(fastqc_zip_path)
+    step_dir = os.getcwd()
+    fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
+    if pipe_util.already_step(fastq_dir, 'fastqc_db_' + fastqc_zip_base, logger):
         logger.info('already completed step `fastqc db`: %s' % fq_path)
     else:
-        logger.info('writing `fastqc db`: %s' % fq_path)
+        logger.info('writing `fastqc db`: %s' % fastqc_zip_path)
+
+        #extract fastqc report
+        cmd = ['unzip', fastqc_zip_path, '-d', step_dir]
+        output = pipe_util.do_command(cmd, logger)
+        
+        fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, 'fastqc_data.txt')
+        fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, 'summary.txt')
+        
         summary_dict = dict()
         summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
         summary_dict['fastq_name'] = fastq_name
@@ -147,6 +144,8 @@ def fastqc_to_db(uuid, fq_path, engine, logger):
             logger.info('fastqc_to_db() table_name=%s' % table_name)
             unique_key_dict = {'uuid': uuid, 'fastq_path': fq_path}
             df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
-        pipe_util.create_already_step(fastq_dir, 'fastqc_db_' + fastq_base, logger)
+
+        shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
+        pipe_util.create_already_step(fastq_dir, 'fastqc_db_' + fastqc_zip_base, logger)
         logger.info('completed writing `fastqc db`: %s' % fq_path)
     return
