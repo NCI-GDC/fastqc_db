@@ -1,6 +1,6 @@
 FROM quay.io/jeremiahsavage/cdis_base
 
-ENV fastqc_sqlite 0.1
+ENV fastqc_sqlite 0.2
 
 RUN /bin/bash -c "source ${HOME}/.virtualenvs/p3/bin/activate \
     && pip install fastqc_sqlite"
