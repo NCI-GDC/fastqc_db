@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(name = 'fastqc_sqlite',
       author = 'Jeremiah H. Savage',
       author_email = 'jeremiahsavage@gmail.com',
-      version = 0.6,
+      version = 0.7,
       description = 'store FastQC data/summary in sqlitedb',
       url = 'https://github.com/jeremiahsavage/fastqc_sqlite',
       license = 'Apache 2.0',
