@@ -4,6 +4,8 @@ import argparse
 import logging
 import sys
 
+import sqlalchemy
+
 from cdis_pipe_utils import pipe_util
 
 import fastqc_db
