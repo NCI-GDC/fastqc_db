@@ -126,7 +126,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
         
         summary_dict = dict()
         summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
-        summary_dict['fastq_name'] = fastq_name
+        summary_dict['fastq_name'] = fastqc_zip_base # to fix
         summary_dict = fastqc_summary_to_dict(summary_dict, fastqc_summary_path, engine, logger)
         df = pd.DataFrame(summary_dict)
         table_name = 'fastqc_summary'
