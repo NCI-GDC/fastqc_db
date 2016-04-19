@@ -2,12 +2,12 @@
 
 from setuptools import setup, find_packages
 
-setup(name = 'fastqc_sqlite',
+setup(name = 'fastqc_db',
       author = 'Jeremiah H. Savage',
       author_email = 'jeremiahsavage@gmail.com',
-      version = 0.13,
+      version = 0.14,
       description = 'store FastQC data/summary in sqlitedb',
-      url = 'https://github.com/jeremiahsavage/fastqc_sqlite',
+      url = 'https://github.com/jeremiahsavage/fastqc_db',
       license = 'Apache 2.0',
       packages = find_packages(),
       install_requires = [
