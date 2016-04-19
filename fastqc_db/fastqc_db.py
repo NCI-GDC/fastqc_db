@@ -18,7 +18,7 @@ def get_total_deduplicated_percentage(fastqc_data_open, logger):
     sys.exit(1)
 
 
-def fastqc_detail_to_df(uuid, fq_path, fastqc_data_path, data_key, engine, logger):
+def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, logger):
     logger.info('detail step: %s'  % data_key)
     logger.info('fastqc_data_path: %s' % fastqc_data_path)
     process_data = False
@@ -42,7 +42,7 @@ def fastqc_detail_to_df(uuid, fq_path, fastqc_data_path, data_key, engine, logge
                 logger.info('fastqc_detail_to_df() >>END_MODULE')
                 if data_key == '>>Basic Statistics':
                     value_list = get_total_deduplicated_percentage(fastqc_data_open, logger)
-                    row_df = pd.DataFrame([uuid, fq_path] + value_list)
+                    row_df = pd.DataFrame([uuid, fastq_name] + value_list)
                     row_df_t = row_df.T
                     row_df_t.columns = ['uuid', 'fastq_path'] + header_list
                     #logger.info('9 row_df_t=%s' % row_df_t)
@@ -62,7 +62,7 @@ def fastqc_detail_to_df(uuid, fq_path, fastqc_data_path, data_key, engine, logge
                 #logger.info('2 df=%s' % df)
                 line_split = line.strip('\n').split('\t')
                 logger.info('process_header line_split=%s' % line_split)
-                row_df = pd.DataFrame([uuid, fq_path] + line_split)
+                row_df = pd.DataFrame([uuid, fastq_name] + line_split)
                 row_df_t = row_df.T
                 row_df_t.columns = ['uuid', 'fastq_path'] + header_list
                 logger.info('1 row_df_t=%s' % row_df_t)
@@ -72,7 +72,7 @@ def fastqc_detail_to_df(uuid, fq_path, fastqc_data_path, data_key, engine, logge
                 #logger.info('\tcase 7')
                 line_split = line.strip('\n').split('\t')
                 logger.info('not process_header line_split=%s' % line_split)
-                row_df = pd.DataFrame([uuid, fq_path] + line_split)
+                row_df = pd.DataFrame([uuid, fastq_name] + line_split)
                 row_df_t = row_df.T
                 row_df_t.columns = ['uuid', 'fastq_path'] + header_list
                 logger.info('not process_header line_split=%s' % line_split)
@@ -123,7 +123,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
     step_dir = os.getcwd()
     fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
     if pipe_util.already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger):
-        logger.info('already completed step `fastqc db`: %s' % fq_path)
+        logger.info('already completed step `fastqc db`: %s' % fastqc_zip_path)
     else:
         logger.info('writing `fastqc db`: %s' % fastqc_zip_path)
 
@@ -149,7 +149,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
                            '>>Per base N content', '>>Sequence Length Distribution', '>>Sequence Duplication Levels',
                            '>>Overrepresented sequences', '>>Adapter Content', '>>Kmer Content']
         for data_key in data_key_list:
-            df = fastqc_detail_to_df(uuid, fq_path, fastqc_data_path, data_key, engine, logger)
+            df = fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, logger)
             if df is None:
                 continue
             table_name = 'fastqc_data_' + '_'.join(data_key.lstrip('>>').strip().split(' '))
@@ -159,5 +159,5 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
 
         shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
         pipe_util.create_already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger)
-        logger.info('completed writing `fastqc db`: %s' % fq_path)
+        logger.info('completed writing `fastqc db`: %s' % fastq_name)
     return
