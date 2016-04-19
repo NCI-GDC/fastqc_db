@@ -134,7 +134,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
         fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, 'fastqc_data.txt')
         fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, 'summary.txt')
 
-        fastq_name = get_fastq_name(fastqc_data_path)
+        fastq_name = get_fastq_name(fastqc_data_path, logger)
         
         summary_dict = dict()
         summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
