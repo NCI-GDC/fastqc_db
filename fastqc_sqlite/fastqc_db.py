@@ -112,7 +112,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
     fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
-    if pipe_util.already_step(fastq_dir, 'fastqc_db_' + fastqc_zip_base, logger):
+    if pipe_util.already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger):
         logger.info('already completed step `fastqc db`: %s' % fq_path)
     else:
         logger.info('writing `fastqc db`: %s' % fastqc_zip_path)
@@ -146,6 +146,6 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
             df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
 
         shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
-        pipe_util.create_already_step(fastq_dir, 'fastqc_db_' + fastqc_zip_base, logger)
+        pipe_util.create_already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger)
         logger.info('completed writing `fastqc db`: %s' % fq_path)
     return
