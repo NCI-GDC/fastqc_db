@@ -44,7 +44,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
                     value_list = get_total_deduplicated_percentage(fastqc_data_open, logger)
                     row_df = pd.DataFrame([uuid, fastq_name] + value_list)
                     row_df_t = row_df.T
-                    row_df_t.columns = ['uuid', 'fastq_path'] + header_list
+                    row_df_t.columns = ['uuid', 'fastq_name'] + header_list
                     #logger.info('9 row_df_t=%s' % row_df_t)
                     df = df.append(row_df_t)
                 break
@@ -56,7 +56,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
             elif process_data and process_header:
                 #logger.info('\tcase 6')
                 logger.info('fastqc_detail_to_df() columns=%s' % header_list)
-                df = pd.DataFrame(columns = ['uuid', 'fastq_path'] + header_list)
+                df = pd.DataFrame(columns = ['uuid', 'fastq_name'] + header_list)
                 process_header = False
                 have_data = True
                 #logger.info('2 df=%s' % df)
@@ -64,7 +64,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
                 logger.info('process_header line_split=%s' % line_split)
                 row_df = pd.DataFrame([uuid, fastq_name] + line_split)
                 row_df_t = row_df.T
-                row_df_t.columns = ['uuid', 'fastq_path'] + header_list
+                row_df_t.columns = ['uuid', 'fastq_name'] + header_list
                 logger.info('1 row_df_t=%s' % row_df_t)
                 df = df.append(row_df_t)
                 #logger.info('3 df=%s' % df)
@@ -74,7 +74,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
                 logger.info('not process_header line_split=%s' % line_split)
                 row_df = pd.DataFrame([uuid, fastq_name] + line_split)
                 row_df_t = row_df.T
-                row_df_t.columns = ['uuid', 'fastq_path'] + header_list
+                row_df_t.columns = ['uuid', 'fastq_name'] + header_list
                 logger.info('not process_header line_split=%s' % line_split)
                 logger.info('2 row_df_t=%s' % row_df_t)
                 df = df.append(row_df_t)
