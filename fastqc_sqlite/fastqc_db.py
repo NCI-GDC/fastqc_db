@@ -130,7 +130,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
         summary_dict = fastqc_summary_to_dict(summary_dict, fastqc_summary_path, engine, logger)
         df = pd.DataFrame(summary_dict)
         table_name = 'fastqc_summary'
-        unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name}
+        unique_key_dict = {'uuid': uuid, 'fastq_name': fastqc_zip_base} # to fix
         df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
         data_key_list = ['>>Basic Statistics', '>>Per base sequence quality', '>>Per tile sequence quality',
                            '>>Per sequence quality scores', '>>Per base sequence content', '>>Per sequence GC content',
