@@ -106,13 +106,22 @@ def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
             data_dict[line_key] = line_value
     return data_dict
 
+def get_fastq_name(fastqc_data_path, logger):
+    with open(fastqc_data_path) as data_open:
+        for line in data_open:
+            if line.startswith('Filename\t'):
+                line_split=line.split('\t')
+                fastq_name = line_split[1].strip()
+                return fastq_name
+    logger.debug('unable to find fastq_name in %s' % fastqc_data_path)
+    sys.exit(1)
+    return
 
 
 def fastqc_db(uuid, fastqc_zip_path, engine, logger):
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
     fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
-    fastq_name = fastqc_zip_base.replace('_fastqc','') + '' #####get from summary
     if pipe_util.already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger):
         logger.info('already completed step `fastqc db`: %s' % fq_path)
     else:
@@ -124,14 +133,16 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
         
         fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, 'fastqc_data.txt')
         fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, 'summary.txt')
+
+        fastq_name = get_fastq_name(fastqc_data_path)
         
         summary_dict = dict()
         summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
-        summary_dict['fastq_name'] = fastqc_zip_base # to fix
+        summary_dict['fastq_name'] = fastq_name
         summary_dict = fastqc_summary_to_dict(summary_dict, fastqc_summary_path, engine, logger)
         df = pd.DataFrame(summary_dict)
         table_name = 'fastqc_summary'
-        unique_key_dict = {'uuid': uuid, 'fastq_name': fastqc_zip_base} # to fix
+        unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name} # to fix
         df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
         data_key_list = ['>>Basic Statistics', '>>Per base sequence quality', '>>Per tile sequence quality',
                            '>>Per sequence quality scores', '>>Per base sequence content', '>>Per sequence GC content',
@@ -143,7 +154,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
                 continue
             table_name = 'fastqc_data_' + '_'.join(data_key.lstrip('>>').strip().split(' '))
             logger.info('fastqc_to_db() table_name=%s' % table_name)
-            unique_key_dict = {'uuid': uuid, 'fastq_path': fq_path}
+            unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name}
             df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
 
         shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
