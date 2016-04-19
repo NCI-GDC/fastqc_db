@@ -112,6 +112,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
     fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
+    fastq_name = fastqc_zip_base.replace('_fastqc','') + '' #####get from summary
     if pipe_util.already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger):
         logger.info('already completed step `fastqc db`: %s' % fq_path)
     else:
