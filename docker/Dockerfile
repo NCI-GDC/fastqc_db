@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y --force-yes \
 
 USER ubuntu
 
-ENV fastqc_sqlite 0.18
+ENV fastqc_sqlite 0.19
 
 RUN /bin/bash -c "source ${HOME}/.virtualenvs/p3/bin/activate \
     && pip install fastqc_db"
