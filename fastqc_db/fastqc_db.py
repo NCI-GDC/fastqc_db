@@ -104,6 +104,8 @@ def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
             line_key = line_split[1].strip()
             line_value = line_split[0].strip()
             data_dict[line_key] = line_value
+    if "Per tile sequence quality" not in data_dict:
+        data_dict['Per tile sequence quality'] = None
     return data_dict
 
 def get_fastq_name(fastqc_data_path, logger):
