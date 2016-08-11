@@ -40,7 +40,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
                     value_list = get_total_deduplicated_percentage(fastqc_data_open, logger)
                     row_df = pd.DataFrame([uuid, fastq_name] + value_list)
                     row_df_t = row_df.T
-                    row_df_t.columns = ['uuid', 'fastq_name'] + header_list
+                    row_df_t.columns = ['uuid', 'fastq'] + header_list
                     #logger.info('9 row_df_t=%s' % row_df_t)
                     df = df.append(row_df_t)
                 break
@@ -52,7 +52,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
             elif process_data and process_header:
                 #logger.info('\tcase 6')
                 logger.info('fastqc_detail_to_df() columns=%s' % header_list)
-                df = pd.DataFrame(columns = ['uuid', 'fastq_name'] + header_list)
+                df = pd.DataFrame(columns = ['uuid', 'fastq'] + header_list)
                 process_header = False
                 have_data = True
                 #logger.info('2 df=%s' % df)
@@ -60,7 +60,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
                 logger.info('process_header line_split=%s' % line_split)
                 row_df = pd.DataFrame([uuid, fastq_name] + line_split)
                 row_df_t = row_df.T
-                row_df_t.columns = ['uuid', 'fastq_name'] + header_list
+                row_df_t.columns = ['uuid', 'fastq'] + header_list
                 logger.info('1 row_df_t=%s' % row_df_t)
                 df = df.append(row_df_t)
                 #logger.info('3 df=%s' % df)
@@ -70,7 +70,7 @@ def fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, lo
                 logger.info('not process_header line_split=%s' % line_split)
                 row_df = pd.DataFrame([uuid, fastq_name] + line_split)
                 row_df_t = row_df.T
-                row_df_t.columns = ['uuid', 'fastq_name'] + header_list
+                row_df_t.columns = ['uuid', 'fastq'] + header_list
                 logger.info('not process_header line_split=%s' % line_split)
                 logger.info('2 row_df_t=%s' % row_df_t)
                 df = df.append(row_df_t)
@@ -104,6 +104,7 @@ def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
         data_dict['Per tile sequence quality'] = None
     return data_dict
 
+
 def get_fastq_name(fastqc_data_path, logger):
     with open(fastqc_data_path) as data_open:
         for line in data_open:
@@ -124,7 +125,7 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
 
     #extract fastqc report
     cmd = ['unzip', fastqc_zip_path, '-d', step_dir]
-    output = subprocess.check_output(cmd, )
+    output = subprocess.check_output(cmd)
 
     fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, 'fastqc_data.txt')
     fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, 'summary.txt')
@@ -133,11 +134,10 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
 
     summary_dict = dict()
     summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
-    summary_dict['fastq_name'] = fastq_name
+    summary_dict['fastq'] = fastq_name
     summary_dict = fastqc_summary_to_dict(summary_dict, fastqc_summary_path, engine, logger)
     df = pd.DataFrame(summary_dict)
     table_name = 'fastqc_summary'
-    unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name} # to fix
     df.to_sql(table_name, engine, if_exists='append')
     data_key_list = ['>>Basic Statistics', '>>Per base sequence quality', '>>Per tile sequence quality',
                        '>>Per sequence quality scores', '>>Per base sequence content', '>>Per sequence GC content',
@@ -149,7 +149,6 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
             continue
         table_name = 'fastqc_data_' + '_'.join(data_key.lstrip('>>').strip().split(' '))
         logger.info('fastqc_to_db() table_name=%s' % table_name)
-        unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name}
         df.to_sql(table_name, engine, if_exists='append')
 
     shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
