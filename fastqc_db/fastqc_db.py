@@ -1,13 +1,9 @@
 import os
 import shutil
+import subprocess
 import sys
-#
+
 import pandas as pd
-#
-from cdis_pipe_utils import df_util
-from cdis_pipe_utils import pipe_util
-from cdis_pipe_utils import fastq_util
-from cdis_pipe_utils import time_util
 
 def get_total_deduplicated_percentage(fastqc_data_open, logger):
     for line in fastqc_data_open:
@@ -124,42 +120,38 @@ def fastqc_db(uuid, fastqc_zip_path, engine, logger):
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
     fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
-    if pipe_util.already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger):
-        logger.info('already completed step `fastqc db`: %s' % fastqc_zip_path)
-    else:
-        logger.info('writing `fastqc db`: %s' % fastqc_zip_path)
+    logger.info('writing `fastqc db`: %s' % fastqc_zip_path)
 
-        #extract fastqc report
-        cmd = ['unzip', fastqc_zip_path, '-d', step_dir]
-        output = pipe_util.do_command(cmd, logger)
-        
-        fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, 'fastqc_data.txt')
-        fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, 'summary.txt')
+    #extract fastqc report
+    cmd = ['unzip', fastqc_zip_path, '-d', step_dir]
+    output = subprocess.check_output(cmd, )
 
-        fastq_name = get_fastq_name(fastqc_data_path, logger)
-        
-        summary_dict = dict()
-        summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
-        summary_dict['fastq_name'] = fastq_name
-        summary_dict = fastqc_summary_to_dict(summary_dict, fastqc_summary_path, engine, logger)
-        df = pd.DataFrame(summary_dict)
-        table_name = 'fastqc_summary'
-        unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name} # to fix
-        df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
-        data_key_list = ['>>Basic Statistics', '>>Per base sequence quality', '>>Per tile sequence quality',
-                           '>>Per sequence quality scores', '>>Per base sequence content', '>>Per sequence GC content',
-                           '>>Per base N content', '>>Sequence Length Distribution', '>>Sequence Duplication Levels',
-                           '>>Overrepresented sequences', '>>Adapter Content', '>>Kmer Content']
-        for data_key in data_key_list:
-            df = fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, logger)
-            if df is None:
-                continue
-            table_name = 'fastqc_data_' + '_'.join(data_key.lstrip('>>').strip().split(' '))
-            logger.info('fastqc_to_db() table_name=%s' % table_name)
-            unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name}
-            df_util.save_df_to_sqlalchemy(df, unique_key_dict, table_name, engine, logger)
+    fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, 'fastqc_data.txt')
+    fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, 'summary.txt')
 
-        shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
-        pipe_util.create_already_step(step_dir, 'fastqc_db_' + fastqc_zip_base, logger)
-        logger.info('completed writing `fastqc db`: %s' % fastq_name)
+    fastq_name = get_fastq_name(fastqc_data_path, logger)
+
+    summary_dict = dict()
+    summary_dict['uuid'] = [uuid]  # need one non-scalar value in df to avoid index
+    summary_dict['fastq_name'] = fastq_name
+    summary_dict = fastqc_summary_to_dict(summary_dict, fastqc_summary_path, engine, logger)
+    df = pd.DataFrame(summary_dict)
+    table_name = 'fastqc_summary'
+    unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name} # to fix
+    df.to_sql(table_name, engine, if_exists='append')
+    data_key_list = ['>>Basic Statistics', '>>Per base sequence quality', '>>Per tile sequence quality',
+                       '>>Per sequence quality scores', '>>Per base sequence content', '>>Per sequence GC content',
+                       '>>Per base N content', '>>Sequence Length Distribution', '>>Sequence Duplication Levels',
+                       '>>Overrepresented sequences', '>>Adapter Content', '>>Kmer Content']
+    for data_key in data_key_list:
+        df = fastqc_detail_to_df(uuid, fastq_name, fastqc_data_path, data_key, engine, logger)
+        if df is None:
+            continue
+        table_name = 'fastqc_data_' + '_'.join(data_key.lstrip('>>').strip().split(' '))
+        logger.info('fastqc_to_db() table_name=%s' % table_name)
+        unique_key_dict = {'uuid': uuid, 'fastq_name': fastq_name}
+        df.to_sql(table_name, engine, if_exists='append')
+
+    shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
+    logger.info('completed writing `fastqc db`: %s' % fastq_name)
     return
