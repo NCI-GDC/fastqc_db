@@ -1,13 +1,17 @@
-FROM quay.io/jeremiahsavage/cdis_base
+FROM ubuntu:xenial-20160809
+
+MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
 
 USER root
 
-RUN apt-get update && apt-get install -y --force-yes \
-    unzip
+RUN apt-get update && apt-get install -y \
+    python3-pip \
+    python3-pandas \
+    python3-sqlalchemy
 
-USER ubuntu
+RUN apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV fastqc_sqlite 0.24
+ENV fastqc_db 0.25
 
-RUN /bin/bash -c "source ${HOME}/.virtualenvs/p3/bin/activate \
-    && pip install fastqc_db"
+RUN pip3 install fastqc_db"
