@@ -12,6 +12,6 @@ RUN apt-get update && apt-get install -y \
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-ENV fastqc_db 0.25
+ENV fastqc_db 0.26
 
 RUN pip3 install fastqc_db
