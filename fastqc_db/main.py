@@ -9,7 +9,7 @@ import sqlalchemy
 
 import fastqc_db
 
-def setup_logging(tool_name, args, uuid):
+def setup_logging(args, uuid):
     logging.basicConfig(
         filename=os.path.join(uuid + '.log'),
         level=args.level,
