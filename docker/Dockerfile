@@ -7,7 +7,8 @@ USER root
 RUN apt-get update && apt-get install -y \
     python3-pip \
     python3-pandas \
-    python3-sqlalchemy
+    python3-sqlalchemy \
+    unzip
 
 RUN apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
