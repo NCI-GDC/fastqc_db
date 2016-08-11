@@ -14,4 +14,4 @@ RUN apt-get clean \
 
 ENV fastqc_db 0.25
 
-RUN pip3 install fastqc_db"
+RUN pip3 install fastqc_db
