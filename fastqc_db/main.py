@@ -7,7 +7,7 @@ import sys
 
 import sqlalchemy
 
-from fastqc_db import fastqc_db
+from .fastqc_db import fastqc_db
 
 def setup_logging(args, uuid):
     logging.basicConfig(
