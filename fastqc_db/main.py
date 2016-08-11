@@ -7,7 +7,7 @@ import sys
 
 import sqlalchemy
 
-import fastqc_db
+from fastqc_db import fastqc_db
 
 def setup_logging(args, uuid):
     logging.basicConfig(
@@ -57,7 +57,7 @@ def main():
     engine_path = 'sqlite:///' + sqlite_name
     engine = sqlalchemy.create_engine(engine_path, isolation_level='SERIALIZABLE')
 
-    fastqc_db.fastqc_db(uuid, fastqc_zip_path, engine, logger)
+    fastqc_db(uuid, fastqc_zip_path, engine, logger)
     return
 
 
