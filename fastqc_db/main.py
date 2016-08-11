@@ -7,9 +7,20 @@ import sys
 
 import sqlalchemy
 
-from cdis_pipe_utils import pipe_util
-
 import fastqc_db
+
+def setup_logging(tool_name, args, uuid):
+    logging.basicConfig(
+        filename=os.path.join(uuid + '.log'),
+        level=args.level,
+        filemode='w',
+        format='%(asctime)s %(levelname)s %(message)s',
+        datefmt='%Y-%m-%d_%H:%M:%S_%Z',
+    )
+    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    logger = logging.getLogger(__name__)
+    return logger
+
 
 def main():
     parser = argparse.ArgumentParser('FastQC to sqlite')
@@ -25,23 +36,22 @@ def main():
 
     # Required flags.
     parser.add_argument('--uuid',
-                        required = True,
-                        help = 'uuid string',
+                        required = True
     )
-    parser.add_argument('--fastqc_zip_path',
+    parser.add_argument('--INPUT',
                         required=True
     )
 
     # setup required parameters
     args = parser.parse_args()
     uuid = args.uuid
-    fastqc_zip_path = args.fastqc_zip_path
+    fastqc_zip_path = args.INPUT
 
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     fastqc_zip_base, zip_ext = os.path.splitext(fastqc_zip_name)
     
     tool_name = 'fastqc_db'
-    logger = pipe_util.setup_logging(tool_name, args, uuid)
+    logger = setup_logging(args, uuid)
 
     sqlite_name = fastqc_zip_base + '.db'
     engine_path = 'sqlite:///' + sqlite_name
