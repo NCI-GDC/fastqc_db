@@ -2,17 +2,12 @@ FROM ubuntu:xenial-20160809
 
 MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
 
-USER root
-
-RUN apt-get update && apt-get install -y \
-    python3-pandas \
-    python3-pip \
-    python3-sqlalchemy \
-    unzip
-
-RUN apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-ENV fastqc_db 0.29
-
-RUN pip3 install fastqc_db
+RUN apt-get update \
+    && apt-get install -y \
+       python3-pandas \
+       python3-pip \
+       python3-sqlalchemy \
+       unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    &&  pip3 install fastqc_db
