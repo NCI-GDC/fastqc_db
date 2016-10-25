@@ -11,6 +11,8 @@ RUN echo 'Acquire::http::Proxy "http://cloud-proxy:3128";' >> /etc/apt/apt.conf.
        python3-sqlalchemy \
        unzip \
     && apt-get clean \
+    && export http_proxy=http://cloud-proxy:3128 \
+    && export https_proxy=http://cloud-proxy:3128 \
     && pip3 install fastqc_db \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
     && rm -f /etc/apt/apt.conf.d/01proxy
