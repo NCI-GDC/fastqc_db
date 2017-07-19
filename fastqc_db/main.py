@@ -9,9 +9,9 @@ import sqlalchemy
 
 from .fastqc_db import fastqc_db
 
-def setup_logging(args, uuid):
+def setup_logging(args, run_uuid):
     logging.basicConfig(
-        filename=os.path.join(uuid + '.log'),
+        filename=os.path.join(run_uuid + '.log'),
         level=args.level,
         filemode='w',
         format='%(asctime)s %(levelname)s %(message)s',
@@ -35,7 +35,7 @@ def main():
     parser.set_defaults(level = logging.INFO)
 
     # Required flags.
-    parser.add_argument('--uuid',
+    parser.add_argument('--run_uuid',
                         required = True
     )
     parser.add_argument('--INPUT',
@@ -44,20 +44,20 @@ def main():
 
     # setup required parameters
     args = parser.parse_args()
-    uuid = args.uuid
+    run_uuid = args.run_uuid
     fastqc_zip_path = args.INPUT
 
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     fastqc_zip_base, zip_ext = os.path.splitext(fastqc_zip_name)
     
     tool_name = 'fastqc_db'
-    logger = setup_logging(args, uuid)
+    logger = setup_logging(args, run_uuid)
 
     sqlite_name = fastqc_zip_base + '.db'
     engine_path = 'sqlite:///' + sqlite_name
     engine = sqlalchemy.create_engine(engine_path, isolation_level='SERIALIZABLE')
 
-    fastqc_db(uuid, fastqc_zip_path, engine, logger)
+    fastqc_db(run_uuid, fastqc_zip_path, engine, logger)
     return
 
 
