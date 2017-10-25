@@ -2,7 +2,7 @@ FROM ubuntu:zesty-20170915
 
 MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
 
-ENV VERSION 0.32
+ENV VERSION 0.33
 
 RUN apt-get update \
     && apt-get install -y \
