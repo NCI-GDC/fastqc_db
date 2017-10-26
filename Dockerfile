@@ -1,4 +1,4 @@
-FROM ubuntu:zesty-20170915
+FROM ubuntu:artful-20171019
 
 MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
 
