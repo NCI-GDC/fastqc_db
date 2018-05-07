@@ -1,4 +1,4 @@
-FROM ubuntu:artful-20171019
+FROM ubuntu:bionic-20180426
 
 MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
 
