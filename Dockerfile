@@ -1,16 +1,22 @@
-FROM ubuntu:bionic-20180426
+FROM quay.io/ncigdc/python38-builder as builder
 
-MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
+COPY ./ /opt
 
-ENV VERSION 0.34
+WORKDIR /opt
 
-RUN apt-get update \
-    && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y \
-       python3-pandas \
-       python3-pip \
-       python3-sqlalchemy \
-       unzip \
-    && apt-get clean \
-    && pip3 install fastqc_db \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN pip install tox && tox -p
+
+FROM quay.io/ncigdc/python38
+
+COPY --from=builder /opt/dist/*.tar.gz /opt
+COPY requirements.txt /opt
+
+WORKDIR /opt
+
+RUN pip install -r requirements.txt \
+	&& pip install *.tar.gz \
+	&& rm -f *.tar.gz requirements.txt
+
+ENTRYPOINT ["fastqc_db"]
+
+CMD ["--help"]
