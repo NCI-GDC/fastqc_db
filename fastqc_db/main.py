@@ -3,13 +3,13 @@
 import argparse
 import logging
 import os
-import sys
 
 import sqlalchemy
 
-from .fastqc_db import fastqc_db
+from fastqc_db.fastqc_db import fastqc_db
 
-def setup_logging(args, job_uuid):
+
+def setup_logging(args: argparse.Namespace, job_uuid: str) -> logging.Logger:
     logging.basicConfig(
         filename=os.path.join(job_uuid + '.log'),
         level=args.level,
@@ -22,25 +22,23 @@ def setup_logging(args, job_uuid):
     return logger
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser('FastQC to sqlite')
 
     # Logging flags.
-    parser.add_argument('-d', '--debug',
-        action = 'store_const',
-        const = logging.DEBUG,
-        dest = 'level',
-        help = 'Enable debug logging.',
+    parser.add_argument(
+        '-d',
+        '--debug',
+        action='store_const',
+        const=logging.DEBUG,
+        dest='level',
+        help='Enable debug logging.',
     )
-    parser.set_defaults(level = logging.INFO)
+    parser.set_defaults(level=logging.INFO)
 
     # Required flags.
-    parser.add_argument('--job_uuid',
-                        required = True
-    )
-    parser.add_argument('--INPUT',
-                        required=True
-    )
+    parser.add_argument('--job_uuid', required=True)
+    parser.add_argument('--INPUT', required=True)
 
     # setup required parameters
     args = parser.parse_args()
@@ -48,17 +46,16 @@ def main():
     fastqc_zip_path = args.INPUT
 
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
-    fastqc_zip_base, zip_ext = os.path.splitext(fastqc_zip_name)
-    
-    tool_name = 'fastqc_db'
+    fastqc_zip_base, _ = os.path.splitext(fastqc_zip_name)
+
     logger = setup_logging(args, job_uuid)
 
-    sqlite_name = fastqc_zip_base + '.db'
-    engine_path = 'sqlite:///' + sqlite_name
+    sqlite_name = f'{fastqc_zip_base}.db'
+    engine_path = f'sqlite:///{sqlite_name}'
     engine = sqlalchemy.create_engine(engine_path, isolation_level='SERIALIZABLE')
 
     fastqc_db(job_uuid, fastqc_zip_path, engine, logger)
-    return
+    return 0
 
 
 if __name__ == '__main__':
