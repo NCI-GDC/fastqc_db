@@ -21,8 +21,7 @@ dynamic = ["version"]
 dependencies = [
     "click",
     "pandas",
-    "sqlalchemy",
-    "fastqc_db"
+    "sqlalchemy"
 ]
 
 [project.optional-dependencies]
