@@ -1,16 +1,32 @@
-FROM ubuntu:bionic-20180426
+ARG REGISTRY=docker.osdc.io/ncigdc
+ARG BASE_CONTAINER_VERSION=latest
 
-MAINTAINER Jeremiah H. Savage <jeremiahsavage@gmail.com>
+FROM ${REGISTRY}/python3.9-builder:${BASE_CONTAINER_VERSION} as builder
 
-ENV VERSION 0.34
+COPY ./ /fastqc_db
 
-RUN apt-get update \
-    && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get install -y \
-       python3-pandas \
-       python3-pip \
-       python3-sqlalchemy \
-       unzip \
-    && apt-get clean \
-    && pip3 install fastqc_db \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+WORKDIR /fastqc_db
+
+RUN pip install tox && tox -e build
+
+FROM ${REGISTRY}/python3.9:${BASE_CONTAINER_VERSION}
+
+LABEL org.opencontainers.image.title="fastqc_db" \
+      org.opencontainers.image.description="fastqc_sqlite" \
+      org.opencontainers.image.source="https://github.com/NCI-GDC/fastqc_db" \
+      org.opencontainers.image.vendor="NCI GDC"
+
+COPY --from=builder /fastqc_db/dist/*.whl /fastqc_db/
+COPY requirements.txt /fastqc_db/
+
+WORKDIR /fastqc_db
+
+RUN pip install --no-deps -r requirements.txt \
+	&& pip install --no-deps *.whl \
+	&& rm -f *.whl requirements.txt
+
+USER app
+
+ENTRYPOINT ["fastqc_db"]
+
+CMD ["--help"]
