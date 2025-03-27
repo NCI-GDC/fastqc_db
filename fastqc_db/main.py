@@ -3,13 +3,14 @@
 import argparse
 import logging
 import os
+from argparse import Namespace
 
 import sqlalchemy
 
 from .fastqc_db import fastqc_db
 
 
-def setup_logging(args, job_uuid):
+def setup_logging(args: Namespace, job_uuid: str) -> logging.Logger:
     logging.basicConfig(
         filename=os.path.join(job_uuid + ".log"),
         level=args.level,
@@ -22,7 +23,7 @@ def setup_logging(args, job_uuid):
     return logger
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser("FastQC to sqlite")
 
     # Logging flags.
