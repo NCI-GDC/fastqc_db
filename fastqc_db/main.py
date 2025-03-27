@@ -23,7 +23,7 @@ def setup_logging(args: Namespace, job_uuid: str) -> logging.Logger:
     return logger
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser("FastQC to sqlite")
 
     # Logging flags.
@@ -56,7 +56,7 @@ def main() -> None:
     engine = sqlalchemy.create_engine(engine_path, isolation_level="SERIALIZABLE")
 
     fastqc_db(job_uuid, fastqc_zip_path, engine, logger)
-    return
+    return 0
 
 
 if __name__ == "__main__":
