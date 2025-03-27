@@ -23,6 +23,7 @@ def fastqc_detail_to_df(
     process_data = False
     process_header = False
     have_data = False
+    df = None
     with open(fastqc_data_path, "r") as fastqc_data_open:
         for line in fastqc_data_open:
             # logger.info('line=%s' % line)
@@ -47,9 +48,10 @@ def fastqc_detail_to_df(
                     )
                     row_df = pd.DataFrame([job_uuid, fastq_name] + value_list)
                     row_df_t = row_df.T
-                    row_df_t.columns = ["job_uuid", "fastq"] + header_list
+                    row_df_t.columns = ["job_uuid", "fastq"]
                     # logger.info('9 row_df_t=%s' % row_df_t)
-                    df = df.append(row_df_t)
+                    if df is not None:
+                        df = df.append(row_df_t)
                 break
             elif process_data and line.startswith("#"):
                 # logger.info('\tcase 5')
@@ -132,7 +134,7 @@ def fastqc_db(job_uuid, fastqc_zip_path, engine, logger):
 
     # extract fastqc report
     cmd = ["unzip", fastqc_zip_path, "-d", step_dir]
-    output = subprocess.check_output(cmd)
+    output = subprocess.check_output(cmd)  # noqa: F841
 
     fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, "fastqc_data.txt")
     fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, "summary.txt")

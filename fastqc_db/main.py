@@ -3,7 +3,6 @@
 import argparse
 import logging
 import os
-import sys
 
 import sqlalchemy
 
@@ -49,7 +48,6 @@ def main():
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     fastqc_zip_base, zip_ext = os.path.splitext(fastqc_zip_name)
 
-    tool_name = "fastqc_db"
     logger = setup_logging(args, job_uuid)
 
     sqlite_name = fastqc_zip_base + ".db"
