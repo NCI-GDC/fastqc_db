@@ -40,15 +40,16 @@ dev = [
     "tox",
 ]
 
-test = [
-    "coverage",
-    "pytest",
-]
-
 type = [
     "types-click",
     "sqlalchemy-stubs",
     "pandas-stubs"
+]
+
+
+test = [
+    "coverage[toml]",
+    "pytest",
 ]
 
 [project.urls]
