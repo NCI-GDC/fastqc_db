@@ -9,38 +9,37 @@ import sqlalchemy
 
 from .fastqc_db import fastqc_db
 
+
 def setup_logging(args, job_uuid):
     logging.basicConfig(
-        filename=os.path.join(job_uuid + '.log'),
+        filename=os.path.join(job_uuid + ".log"),
         level=args.level,
-        filemode='w',
-        format='%(asctime)s %(levelname)s %(message)s',
-        datefmt='%Y-%m-%d_%H:%M:%S_%Z',
+        filemode="w",
+        format="%(asctime)s %(levelname)s %(message)s",
+        datefmt="%Y-%m-%d_%H:%M:%S_%Z",
     )
-    logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
     logger = logging.getLogger(__name__)
     return logger
 
 
 def main():
-    parser = argparse.ArgumentParser('FastQC to sqlite')
+    parser = argparse.ArgumentParser("FastQC to sqlite")
 
     # Logging flags.
-    parser.add_argument('-d', '--debug',
-        action = 'store_const',
-        const = logging.DEBUG,
-        dest = 'level',
-        help = 'Enable debug logging.',
+    parser.add_argument(
+        "-d",
+        "--debug",
+        action="store_const",
+        const=logging.DEBUG,
+        dest="level",
+        help="Enable debug logging.",
     )
-    parser.set_defaults(level = logging.INFO)
+    parser.set_defaults(level=logging.INFO)
 
     # Required flags.
-    parser.add_argument('--job_uuid',
-                        required = True
-    )
-    parser.add_argument('--INPUT',
-                        required=True
-    )
+    parser.add_argument("--job_uuid", required=True)
+    parser.add_argument("--INPUT", required=True)
 
     # setup required parameters
     args = parser.parse_args()
@@ -49,17 +48,17 @@ def main():
 
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     fastqc_zip_base, zip_ext = os.path.splitext(fastqc_zip_name)
-    
-    tool_name = 'fastqc_db'
+
+    tool_name = "fastqc_db"
     logger = setup_logging(args, job_uuid)
 
-    sqlite_name = fastqc_zip_base + '.db'
-    engine_path = 'sqlite:///' + sqlite_name
-    engine = sqlalchemy.create_engine(engine_path, isolation_level='SERIALIZABLE')
+    sqlite_name = fastqc_zip_base + ".db"
+    engine_path = "sqlite:///" + sqlite_name
+    engine = sqlalchemy.create_engine(engine_path, isolation_level="SERIALIZABLE")
 
     fastqc_db(job_uuid, fastqc_zip_path, engine, logger)
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
