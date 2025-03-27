@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Any, Optional, TextIO
+from typing import Any, TextIO
 
 import pandas as pd
 import sqlalchemy
