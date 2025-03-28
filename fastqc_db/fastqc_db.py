@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 import sys
-from typing import Any, TextIO
+from typing import Any, Dict, List, TextIO
 
 import pandas as pd
 import sqlalchemy
@@ -12,7 +12,7 @@ import sqlalchemy
 # def get_total_deduplicated_percentage(fastqc_data_open, logger):
 def get_total_deduplicated_percentage(
     fastqc_data_open: TextIO, logger: logging.Logger
-) -> list[str]:
+) -> List[str]:
     for line in fastqc_data_open:
         if line.startswith("#Total Deduplicated Percentage"):
             line_split = list()
@@ -131,11 +131,11 @@ def fastqc_detail_to_df(
 
 # def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
 def fastqc_summary_to_dict(
-    data_dict: dict[str, Any],
+    data_dict: Dict[str, Any],
     fastqc_summary_path: str,
     engine: sqlalchemy.engine.Engine,
     logger: logging.Logger,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     logger.info("fastqc_summary_path=%s" % fastqc_summary_path)
     with open(fastqc_summary_path, "r") as fastqc_summary_open:
         for line in fastqc_summary_open:
