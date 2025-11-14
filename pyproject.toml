@@ -21,8 +21,7 @@ dynamic = ["version"]
 dependencies = [
     "click",
     "pandas",
-    "sqlalchemy",
-    "fastqc_db"
+    "sqlalchemy"
 ]
 
 [project.optional-dependencies]
@@ -41,13 +40,16 @@ dev = [
     "tox",
 ]
 
+type = [
+    "types-click",
+    "sqlalchemy-stubs",
+    "pandas-stubs"
+]
+
+
 test = [
     "coverage[toml]",
     "pytest",
-]
-
-type = [
-    "types-click",
 ]
 
 [project.urls]

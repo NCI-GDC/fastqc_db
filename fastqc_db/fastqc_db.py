@@ -1,34 +1,55 @@
+import logging
 import os
 import shutil
 import subprocess
 import sys
+from typing import Any, Dict, List, TextIO
 
 import pandas as pd
+import sqlalchemy
 
 
-def get_total_deduplicated_percentage(fastqc_data_open, logger):
+# def get_total_deduplicated_percentage(fastqc_data_open, logger):
+def get_total_deduplicated_percentage(
+    fastqc_data_open: TextIO, logger: logging.Logger
+) -> List[str]:
     for line in fastqc_data_open:
         if line.startswith("#Total Deduplicated Percentage"):
+            line_split = list()
             line_split = line.strip("\n").lstrip("#").split("\t")
             return line_split
     logger.debug("get_total_deduplicated_percentage() failed")
     sys.exit(1)
 
 
+# def fastqc_detail_to_df(
+#    job_uuid, fastq_name, fastqc_data_path, data_key, engine, logger
+# ):
 def fastqc_detail_to_df(
-    job_uuid, fastq_name, fastqc_data_path, data_key, engine, logger
-):
+    job_uuid: str,
+    fastq_name: str,
+    fastqc_data_path: str,
+    data_key: str,
+    engine: sqlalchemy.engine.Engine,
+    logger: logging.Logger,
+) -> pd.DataFrame:
     logger.info("detail step: %s" % data_key)
     logger.info("fastqc_data_path: %s" % fastqc_data_path)
     process_data = False
     process_header = False
     have_data = False
+    df = pd.DataFrame()
     with open(fastqc_data_path, "r") as fastqc_data_open:
         for line in fastqc_data_open:
             # logger.info('line=%s' % line)
             if line.startswith("##FastQC"):
                 # logger.info('\tcase 1')
                 continue
+            elif process_data and line.startswith("#"):
+                # logger.info('\tcase 5')
+                process_header = True
+                header_list = line.strip("#").strip().split("\t")
+                logger.info("fastqc_detail_to_df() header_list: %s" % header_list)
             elif (
                 process_data and not process_header and line.startswith(">>END_MODULE")
             ):
@@ -45,17 +66,17 @@ def fastqc_detail_to_df(
                     value_list = get_total_deduplicated_percentage(
                         fastqc_data_open, logger
                     )
-                    row_df = pd.DataFrame([job_uuid, fastq_name] + value_list)
-                    row_df_t = row_df.T
-                    row_df_t.columns = ["job_uuid", "fastq"] + header_list
+                    row_df = pd.DataFrame(
+                        [[job_uuid, fastq_name] + value_list],
+                        columns=["job_uuid", "fastq"] + header_list,
+                    )
+                    # row_df = pd.DataFrame([job_uuid, fastq_name] + value_list)
+                    # row_df_t = row_df.T
+                    # row_df_t.columns = ["job_uuid", "fastq"]
                     # logger.info('9 row_df_t=%s' % row_df_t)
-                    df = df.append(row_df_t)
+                    if df is not None:
+                        df = pd.concat([df, row_df], ignore_index=True)
                 break
-            elif process_data and line.startswith("#"):
-                # logger.info('\tcase 5')
-                process_header = True
-                header_list = line.strip("#").strip().split("\t")
-                logger.info("fastqc_detail_to_df() header_list: %s" % header_list)
             elif process_data and process_header:
                 # logger.info('\tcase 6')
                 logger.info("fastqc_detail_to_df() columns=%s" % header_list)
@@ -65,22 +86,31 @@ def fastqc_detail_to_df(
                 # logger.info('2 df=%s' % df)
                 line_split = line.strip("\n").split("\t")
                 logger.info("process_header line_split=%s" % line_split)
-                row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
-                row_df_t = row_df.T
-                row_df_t.columns = ["job_uuid", "fastq"] + header_list
-                logger.info("1 row_df_t=%s" % row_df_t)
-                df = df.append(row_df_t)
+                row_df = pd.DataFrame(
+                    [[job_uuid, fastq_name] + line_split],
+                    columns=[["job_uuid", "fastq"] + header_list],
+                )
+                # row_df
+                # row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
+                # row_df_t = row_df.T
+                # row_df_t.columns = ["job_uuid", "fastq"] + header_list # type: ignore
+                logger.info("1 row_df_t=%s" % row_df)
+                df = pd.concat([df, row_df], ignore_index=True)
                 # logger.info('3 df=%s' % df)
             elif process_data and not process_header:
                 # logger.info('\tcase 7')
                 line_split = line.strip("\n").split("\t")
                 logger.info("not process_header line_split=%s" % line_split)
-                row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
-                row_df_t = row_df.T
-                row_df_t.columns = ["job_uuid", "fastq"] + header_list
+                row_df = pd.DataFrame(
+                    [[job_uuid, fastq_name] + line_split],
+                    columns=[["job_uuid", "fastq"] + header_list],
+                )
+                # row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
+                # row_df_t = row_df.T
+                # row_df_t.columns = ["job_uuid", "fastq"] + header_list # type: ignore
                 logger.info("not process_header line_split=%s" % line_split)
-                logger.info("2 row_df_t=%s" % row_df_t)
-                df = df.append(row_df_t)
+                logger.info("2 row_df_t=%s" % row_df)
+                df = pd.concat([df, row_df], ignore_index=True)
                 # logger.info('4 df=%s' % df)
             elif not process_data and not process_header:
                 # logger.info('\tcase 8')
@@ -94,12 +124,18 @@ def fastqc_detail_to_df(
         return df
     else:
         logger.info("no df")
-        return None
+        return pd.DataFrame()
     logger.debug("fastqc_detail_to_df(): should not reach end of function")
     sys.exit(1)
 
 
-def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
+# def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
+def fastqc_summary_to_dict(
+    data_dict: Dict[str, Any],
+    fastqc_summary_path: str,
+    engine: sqlalchemy.engine.Engine,
+    logger: logging.Logger,
+) -> Dict[str, Any]:
     logger.info("fastqc_summary_path=%s" % fastqc_summary_path)
     with open(fastqc_summary_path, "r") as fastqc_summary_open:
         for line in fastqc_summary_open:
@@ -112,7 +148,8 @@ def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
     return data_dict
 
 
-def get_fastq_name(fastqc_data_path, logger):
+# def get_fastq_name(fastqc_data_path, logger):
+def get_fastq_name(fastqc_data_path: str, logger: logging.Logger) -> str:
     with open(fastqc_data_path) as data_open:
         for line in data_open:
             if line.startswith("Filename\t"):
@@ -124,7 +161,13 @@ def get_fastq_name(fastqc_data_path, logger):
     return
 
 
-def fastqc_db(job_uuid, fastqc_zip_path, engine, logger):
+# def fastqc_db(job_uuid, fastqc_zip_path, engine, logger):
+def fastqc_db(
+    job_uuid: str,
+    fastqc_zip_path: str,
+    engine: sqlalchemy.engine.Engine,
+    logger: logging.Logger,
+) -> None:
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
     fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
@@ -132,7 +175,7 @@ def fastqc_db(job_uuid, fastqc_zip_path, engine, logger):
 
     # extract fastqc report
     cmd = ["unzip", fastqc_zip_path, "-d", step_dir]
-    output = subprocess.check_output(cmd)
+    output = subprocess.check_output(cmd)  # noqa: F841
 
     fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, "fastqc_data.txt")
     fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, "summary.txt")
@@ -143,7 +186,7 @@ def fastqc_db(job_uuid, fastqc_zip_path, engine, logger):
     summary_dict["job_uuid"] = [
         job_uuid
     ]  # need one non-scalar value in df to avoid index
-    summary_dict["fastq"] = fastq_name
+    summary_dict["fastq"] = fastq_name  # type: ignore
     summary_dict = fastqc_summary_to_dict(
         summary_dict, fastqc_summary_path, engine, logger
     )

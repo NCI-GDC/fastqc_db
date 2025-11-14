@@ -5,19 +5,13 @@
 #    pip-compile --output-file=requirements.txt pyproject.toml
 #
 click==8.1.3
-    # via
-    #   fastqc-db
-    #   fastqc_db (pyproject.toml)
-fastqc-db @ file:///mnt/SCRATCH/linghao/fastqc_db
     # via fastqc_db (pyproject.toml)
 greenlet==3.1.1
     # via sqlalchemy
 numpy==2.0.2
     # via pandas
 pandas==2.2.3
-    # via
-    #   fastqc-db
-    #   fastqc_db (pyproject.toml)
+    # via fastqc_db (pyproject.toml)
 python-dateutil==2.9.0.post0
     # via pandas
 pytz==2025.1
@@ -25,9 +19,7 @@ pytz==2025.1
 six==1.17.0
     # via python-dateutil
 sqlalchemy==2.0.39
-    # via
-    #   fastqc-db
-    #   fastqc_db (pyproject.toml)
+    # via fastqc_db (pyproject.toml)
 typing-extensions==4.12.2
     # via sqlalchemy
 tzdata==2025.1
