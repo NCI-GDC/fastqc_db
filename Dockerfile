@@ -16,6 +16,11 @@ LABEL org.opencontainers.image.title="fastqc_db" \
       org.opencontainers.image.source="https://github.com/NCI-GDC/fastqc_db" \
       org.opencontainers.image.vendor="NCI GDC"
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /fastqc_db/dist/*.whl /fastqc_db/
 COPY requirements.txt /fastqc_db/
 
