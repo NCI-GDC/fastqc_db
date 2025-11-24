@@ -56,6 +56,11 @@ def main() -> int:
     engine = sqlalchemy.create_engine(engine_path, isolation_level="SERIALIZABLE")
 
     fastqc_db(job_uuid, fastqc_zip_path, engine, logger)
+
+    if not os.path.exists(f"{job_uuid}.log"):
+        with open(f"{job_uuid}.log", "w") as f:
+            f.write("Log file created but no messages logged.\n")
+
     return 0
 
 
