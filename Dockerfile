@@ -16,6 +16,9 @@ LABEL org.opencontainers.image.title="fastqc_db" \
       org.opencontainers.image.source="https://github.com/NCI-GDC/fastqc_db" \
       org.opencontainers.image.vendor="NCI GDC"
 
+RUN dnf install -y unzip \
+    && dnf clean all
+
 COPY --from=builder /fastqc_db/dist/*.whl /fastqc_db/
 COPY requirements.txt /fastqc_db/
 
