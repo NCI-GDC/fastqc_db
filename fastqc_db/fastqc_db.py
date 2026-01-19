@@ -88,7 +88,7 @@ def fastqc_detail_to_df(
                 logger.info("process_header line_split=%s" % line_split)
                 row_df = pd.DataFrame(
                     [[job_uuid, fastq_name] + line_split],
-                    columns=[["job_uuid", "fastq"] + header_list],
+                    columns=["job_uuid", "fastq"] + header_list,
                 )
                 # row_df
                 # row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
@@ -103,7 +103,7 @@ def fastqc_detail_to_df(
                 logger.info("not process_header line_split=%s" % line_split)
                 row_df = pd.DataFrame(
                     [[job_uuid, fastq_name] + line_split],
-                    columns=[["job_uuid", "fastq"] + header_list],
+                    columns=["job_uuid", "fastq"] + header_list,
                 )
                 # row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
                 # row_df_t = row_df.T
