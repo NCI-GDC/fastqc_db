@@ -6,7 +6,8 @@ import os
 
 import sqlalchemy
 
-from .fastqc_db import fastqc_db 
+from .fastqc_db import fastqc_db
+
 
 def setup_logging(job_uuid: str, level: int) -> logging.Logger:
     logging.basicConfig(
