@@ -30,9 +30,7 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    logger = setup_logging(
-        args.job_uuid, logging.DEBUG if args.debug else logging.INFO
-    )
+    logger = setup_logging(args.job_uuid, logging.DEBUG if args.debug else logging.INFO)
 
     fastqc_zip_name = os.path.basename(args.INPUT)
     fastqc_zip_base, _ = os.path.splitext(fastqc_zip_name)
@@ -48,4 +46,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     main()
-

@@ -31,7 +31,6 @@ def fastqc_detail_to_df(
     engine: sqlalchemy.engine.Engine,
     logger: logging.Logger,
 ) -> pd.DataFrame:
-
     rows = []
     headers = None
     in_module = False
@@ -70,7 +69,6 @@ def fastqc_summary_to_dict(
     engine: sqlalchemy.engine.Engine,
     logger: logging.Logger,
 ) -> Dict[str, Any]:
-
     with open(fastqc_summary_path) as f:
         for line in f:
             status, module, *_ = line.strip().split("\t")
@@ -98,7 +96,6 @@ def fastqc_db(
     engine: sqlalchemy.engine.Engine,
     logger: logging.Logger,
 ) -> None:
-
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
     fastqc_zip_base, _ = os.path.splitext(fastqc_zip_name)
@@ -151,9 +148,8 @@ def fastqc_db(
         if df.empty:
             continue
 
-        table_name = (
-            "fastqc_data_"
-            + "_".join(data_key.lstrip(">>").strip().lower().split())
+        table_name = "fastqc_data_" + "_".join(
+            data_key.lstrip(">>").strip().lower().split()
         )
 
         df.to_sql(
@@ -165,4 +161,3 @@ def fastqc_db(
 
     shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
     logger.info("Completed FastQC DB load for %s", fastq_name)
-
