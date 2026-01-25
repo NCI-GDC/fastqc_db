@@ -9,22 +9,20 @@ import pandas as pd
 import sqlalchemy
 
 
-# def get_total_deduplicated_percentage(fastqc_data_open, logger):
+def clean_headers(headers: List[str]) -> List[str]:
+    return [str(h).strip().replace(" ", "_") for h in headers]
+
+
 def get_total_deduplicated_percentage(
     fastqc_data_open: TextIO, logger: logging.Logger
 ) -> List[str]:
     for line in fastqc_data_open:
         if line.startswith("#Total Deduplicated Percentage"):
-            line_split = list()
-            line_split = line.strip("\n").lstrip("#").split("\t")
-            return line_split
-    logger.debug("get_total_deduplicated_percentage() failed")
+            return line.strip("\n").lstrip("#").split("\t")
+    logger.error("Total Deduplicated Percentage not found")
     sys.exit(1)
 
 
-# def fastqc_detail_to_df(
-#    job_uuid, fastq_name, fastqc_data_path, data_key, engine, logger
-# ):
 def fastqc_detail_to_df(
     job_uuid: str,
     fastq_name: str,
@@ -33,135 +31,65 @@ def fastqc_detail_to_df(
     engine: sqlalchemy.engine.Engine,
     logger: logging.Logger,
 ) -> pd.DataFrame:
-    logger.info("detail step: %s" % data_key)
-    logger.info("fastqc_data_path: %s" % fastqc_data_path)
-    process_data = False
-    process_header = False
-    have_data = False
-    df = pd.DataFrame()
-    with open(fastqc_data_path, "r") as fastqc_data_open:
-        for line in fastqc_data_open:
-            # logger.info('line=%s' % line)
-            if line.startswith("##FastQC"):
-                # logger.info('\tcase 1')
+    rows = []
+    headers = None
+    in_module = False
+
+    with open(fastqc_data_path) as f:
+        for line in f:
+            line = line.rstrip("\n")
+
+            if line.startswith(data_key):
+                in_module = True
                 continue
-            elif process_data and line.startswith("#"):
-                # logger.info('\tcase 5')
-                process_header = True
-                header_list = line.strip("#").strip().split("\t")
-                logger.info("fastqc_detail_to_df() header_list: %s" % header_list)
-            elif (
-                process_data and not process_header and line.startswith(">>END_MODULE")
-            ):
-                # logger.info('\tcase 2')
+
+            if in_module and line.startswith(">>END_MODULE"):
                 break
-            elif line.startswith(data_key):
-                # logger.info('\tcase 3')
-                logger.info("fastqc_detail_to_df() found data_key: %s" % data_key)
-                process_data = True
-            elif process_data and line.startswith(">>END_MODULE"):
-                # logger.info('\tcase 4')
-                logger.info("fastqc_detail_to_df() >>END_MODULE")
-                if data_key == ">>Basic Statistics":
-                    value_list = get_total_deduplicated_percentage(
-                        fastqc_data_open, logger
-                    )
-                    row_df = pd.DataFrame(
-                        [[job_uuid, fastq_name] + value_list],
-                        columns=["job_uuid", "fastq"] + header_list,
-                    )
-                    # row_df = pd.DataFrame([job_uuid, fastq_name] + value_list)
-                    # row_df_t = row_df.T
-                    # row_df_t.columns = ["job_uuid", "fastq"]
-                    # logger.info('9 row_df_t=%s' % row_df_t)
-                    if df is not None:
-                        df = pd.concat([df, row_df], ignore_index=True)
-                break
-            elif process_data and process_header:
-                # logger.info('\tcase 6')
-                logger.info("fastqc_detail_to_df() columns=%s" % header_list)
-                df = pd.DataFrame(columns=["job_uuid", "fastq"] + header_list)
-                process_header = False
-                have_data = True
-                # logger.info('2 df=%s' % df)
-                line_split = line.strip("\n").split("\t")
-                logger.info("process_header line_split=%s" % line_split)
-                row_df = pd.DataFrame(
-                    [[job_uuid, fastq_name] + line_split],
-                    columns=[["job_uuid", "fastq"] + header_list],
-                )
-                # row_df
-                # row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
-                # row_df_t = row_df.T
-                # row_df_t.columns = ["job_uuid", "fastq"] + header_list # type: ignore
-                logger.info("1 row_df_t=%s" % row_df)
-                df = pd.concat([df, row_df], ignore_index=True)
-                # logger.info('3 df=%s' % df)
-            elif process_data and not process_header:
-                # logger.info('\tcase 7')
-                line_split = line.strip("\n").split("\t")
-                logger.info("not process_header line_split=%s" % line_split)
-                row_df = pd.DataFrame(
-                    [[job_uuid, fastq_name] + line_split],
-                    columns=[["job_uuid", "fastq"] + header_list],
-                )
-                # row_df = pd.DataFrame([job_uuid, fastq_name] + line_split)
-                # row_df_t = row_df.T
-                # row_df_t.columns = ["job_uuid", "fastq"] + header_list # type: ignore
-                logger.info("not process_header line_split=%s" % line_split)
-                logger.info("2 row_df_t=%s" % row_df)
-                df = pd.concat([df, row_df], ignore_index=True)
-                # logger.info('4 df=%s' % df)
-            elif not process_data and not process_header:
-                # logger.info('\tcase 8')
+
+            if in_module and line.startswith("#"):
+                headers = clean_headers(line.lstrip("#").split("\t"))
                 continue
-            else:
-                # logger.info('\tcase 9')
-                logger.debug("fastqc_detail_to_df(): should not be here")
-                sys.exit(1)
-    if have_data:
-        logger.info("complete df=%s" % df)
-        return df
-    else:
-        logger.info("no df")
+
+            if in_module and headers:
+                rows.append([job_uuid, fastq_name] + line.split("\t"))
+
+    if not rows or not headers:
+        logger.info("No data for module %s", data_key)
         return pd.DataFrame()
-    logger.debug("fastqc_detail_to_df(): should not reach end of function")
-    sys.exit(1)
+
+    return pd.DataFrame(
+        rows,
+        columns=["job_uuid", "fastq"] + headers,
+    )
 
 
-# def fastqc_summary_to_dict(data_dict, fastqc_summary_path, engine, logger):
 def fastqc_summary_to_dict(
     data_dict: Dict[str, Any],
     fastqc_summary_path: str,
     engine: sqlalchemy.engine.Engine,
     logger: logging.Logger,
 ) -> Dict[str, Any]:
-    logger.info("fastqc_summary_path=%s" % fastqc_summary_path)
-    with open(fastqc_summary_path, "r") as fastqc_summary_open:
-        for line in fastqc_summary_open:
-            line_split = line.split("\t")
-            line_key = line_split[1].strip()
-            line_value = line_split[0].strip()
-            data_dict[line_key] = line_value
+    with open(fastqc_summary_path) as f:
+        for line in f:
+            status, module, *_ = line.strip().split("\t")
+            data_dict[module] = status
+
     if "Per tile sequence quality" not in data_dict:
         data_dict["Per tile sequence quality"] = None
+
     return data_dict
 
 
-# def get_fastq_name(fastqc_data_path, logger):
 def get_fastq_name(fastqc_data_path: str, logger: logging.Logger) -> str:
-    with open(fastqc_data_path) as data_open:
-        for line in data_open:
+    with open(fastqc_data_path) as f:
+        for line in f:
             if line.startswith("Filename\t"):
-                line_split = line.split("\t")
-                fastq_name = line_split[1].strip()
-                return fastq_name
-    logger.debug("unable to find fastq_name in %s" % fastqc_data_path)
+                return line.split("\t")[1].strip()
+
+    logger.error("Filename not found in fastqc_data.txt")
     sys.exit(1)
-    return
 
 
-# def fastqc_db(job_uuid, fastqc_zip_path, engine, logger):
 def fastqc_db(
     job_uuid: str,
     fastqc_zip_path: str,
@@ -170,29 +98,33 @@ def fastqc_db(
 ) -> None:
     fastqc_zip_name = os.path.basename(fastqc_zip_path)
     step_dir = os.getcwd()
-    fastqc_zip_base, fastqc_zip_ext = os.path.splitext(fastqc_zip_name)
-    logger.info("writing `fastqc db`: %s" % fastqc_zip_path)
+    fastqc_zip_base, _ = os.path.splitext(fastqc_zip_name)
 
-    # extract fastqc report
-    cmd = ["unzip", fastqc_zip_path, "-d", step_dir]
-    output = subprocess.check_output(cmd)  # noqa: F841
+    logger.info("Processing FastQC zip: %s", fastqc_zip_path)
+
+    subprocess.check_output(["unzip", "-q", fastqc_zip_path, "-d", step_dir])
 
     fastqc_data_path = os.path.join(step_dir, fastqc_zip_base, "fastqc_data.txt")
     fastqc_summary_path = os.path.join(step_dir, fastqc_zip_base, "summary.txt")
 
     fastq_name = get_fastq_name(fastqc_data_path, logger)
 
-    summary_dict = dict()
-    summary_dict["job_uuid"] = [
-        job_uuid
-    ]  # need one non-scalar value in df to avoid index
-    summary_dict["fastq"] = fastq_name  # type: ignore
+    summary_dict = {
+        "job_uuid": job_uuid,
+        "fastq": fastq_name,
+    }
+
     summary_dict = fastqc_summary_to_dict(
         summary_dict, fastqc_summary_path, engine, logger
     )
-    df = pd.DataFrame(summary_dict)
-    table_name = "fastqc_summary"
-    df.to_sql(table_name, engine, if_exists="append")
+
+    pd.DataFrame([summary_dict]).to_sql(
+        "fastqc_summary",
+        engine,
+        if_exists="append",
+        index=False,
+    )
+
     data_key_list = [
         ">>Basic Statistics",
         ">>Per base sequence quality",
@@ -207,16 +139,25 @@ def fastqc_db(
         ">>Adapter Content",
         ">>Kmer Content",
     ]
+
     for data_key in data_key_list:
         df = fastqc_detail_to_df(
             job_uuid, fastq_name, fastqc_data_path, data_key, engine, logger
         )
-        if df is None:
+
+        if df.empty:
             continue
-        table_name = "fastqc_data_" + "_".join(data_key.lstrip(">>").strip().split(" "))
-        logger.info("fastqc_to_db() table_name=%s" % table_name)
-        df.to_sql(table_name, engine, if_exists="append")
+
+        table_name = "fastqc_data_" + "_".join(
+            data_key.lstrip(">>").strip().lower().split()
+        )
+
+        df.to_sql(
+            table_name,
+            engine,
+            if_exists="append",
+            index=False,
+        )
 
     shutil.rmtree(os.path.join(step_dir, fastqc_zip_base))
-    logger.info("completed writing `fastqc db`: %s" % fastq_name)
-    return
+    logger.info("Completed FastQC DB load for %s", fastq_name)
